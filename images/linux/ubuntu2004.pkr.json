@@ -1,0 +1,102 @@
+{
+  "_comment": "",
+  "variables": {
+    "vm_name": "ubuntu2004",
+    "generation": "2",
+    "cpus": "1",
+    "memory": "1024",
+    "iso_name": "ubuntu-20.04.3-live-server-amd64.iso",
+    "iso_remote_url": "https://releases.ubuntu.com/20.04/{{user `iso_name`}}",
+    "iso_checksum": "sha256:f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98",
+    "http_directory": "{{template_dir}}/http",
+    "output_directory": "{{template_dir}}/output/{{user `vm_name`}}",
+    "ssh_username": "ubuntu",
+    "ssh_password": "ubuntu"
+  },
+
+
+  "builders":
+  [
+    {
+      "name": "hyperv-iso-ubuntu2004",
+
+
+      "type": "hyperv-iso",
+
+
+      "vm_name": "{{user `vm_name`}}",
+      "cpus": "{{user `cpus`}}",
+      "memory": "{{user `memory`}}",
+
+
+      "enable_secure_boot": "false",
+      "guest_additions_mode": "enable",
+      "generation": "{{user `generation`}}",
+
+
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_urls": [
+        "{{template_dir}}/iso/{{user `iso_name`}}",
+        "{{user `iso_remote_url`}}"
+      ],
+
+
+      "ssh_username": "{{user `ssh_username`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_pty": true,
+      "ssh_timeout": "20m",
+      "ssh_handshake_attempts": "20",
+
+
+      "http_directory": "{{user `http_directory`}}/hyperv",
+      "output_directory": "{{user `output_directory`}}",
+
+
+      "boot_wait": "3s",
+      "boot_command": [
+        "<esc><wait1>",
+        "set gfxpayload=keep",
+        "<enter><wait>",
+        "linux /casper/vmlinuz quiet<wait>",
+        " autoinstall<wait>",
+        " \"ds=nocloud-net<wait>",
+        ";s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/\"<wait>",
+        " ---",
+        "<enter><wait>",
+        "initrd /casper/initrd",
+        "<enter><wait>",
+        "boot",
+        "<enter><wait>"
+      ],
+
+      "shutdown_timeout": "1h",
+      "shutdown_command": "echo '{{user `ssh_password`}}' | sudo -S -E shutdown -P now"
+    }
+  ],
+
+
+  "provisioners":
+  [
+    {
+      "type": "shell",
+      "inline": [
+        "ls /",
+        "env"
+      ]
+    },
+    {
+      "type": "shell",
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive",
+        "SSH_USERNAME={{user `ssh_username`}}",
+        "SSH_PASSWORD={{user `ssh_password`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "scripts": [
+        "{{template_dir}}/scripts/cleanup.sh",
+        "{{template_dir}}/scripts/minimize.sh"
+      ],
+      "execute_command": "echo '{{user `ssh_password`}}' | sudo -S -E sh -c '{{ .Vars}} {{ .Path }}'"
+    }
+  ]
+}
