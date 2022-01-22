@@ -143,8 +143,8 @@ build {
       "no_proxy=${var.no_proxy}"
     ]
     scripts = [
-      "${path.root}/scripts/minimize.sh",
-      "${path.root}/scripts/cleanup.sh" # cleanup should be in last
+      "${path.root}/scripts/ubuntu-base/minimize.sh",
+      "${path.root}/scripts/ubuntu-base/cleanup.sh" # cleanup should be in last
     ]
     execute_command = "sudo -S -E sh -c '{{ .Vars }} {{ .Path }}'"
   }
