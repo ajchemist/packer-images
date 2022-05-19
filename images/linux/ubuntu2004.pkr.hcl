@@ -1,6 +1,6 @@
 variable "vm_name" {
   type = string
-  default = "ubuntu2004-zeroboot"
+  default = "ubuntu2004-base"
 }
 
 variable "generation" {
@@ -20,7 +20,7 @@ variable "memory" {
 
 variable "boot_wait" {
   type = string
-  default = "2s"
+  default = "1s"
 }
 
 variable "shutdown_timeout" {
@@ -30,7 +30,7 @@ variable "shutdown_timeout" {
 
 variable "iso_name" {
   type = string
-  default = "ubuntu-20.04.3-live-server-amd64.iso"
+  default = "ubuntu-20.04.4-live-server-amd64.iso"
 }
 
 variable "iso_remote_url" {
@@ -43,6 +43,7 @@ variable "iso_checksum" {
   default = ""
 }
 
+# deprecated
 variable "http_directory" {
   type = string
   default = ""
@@ -51,6 +52,11 @@ variable "http_directory" {
 variable "output_directory" {
   type = string
   default = ""
+}
+
+variable "crypted_password" {
+  type = string
+  default = "$6$rounds=4096$UJSYfXMplc$Z0N/YThWrolFTIREcCCRvVhOigf1YVaH76Io7INhGZwoK9eyBEjkqMS4p4CdSm.iK6SnhhKaQHpn.wJcHuAQt/"
 }
 
 variable "ssh_username" {
@@ -79,10 +85,24 @@ variable "no_proxy" {
   default = ""
 }
 
+variable "locale" {
+  type = string
+  default = "en_US.UTF-8"
+}
+
+variable "keyboard_layout" {
+  type = string
+  default = "en"
+}
+
+variable "keyboard_variant" {
+  type = string
+  default = "us"
+}
+
 locals {
-  iso_checksum = "sha256:f8e3086f3cea0fb3fefb29937ab5ed9d19e767079633960ccb50e76153effc98"
+  iso_checksum = "sha256:28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad"
   iso_remote_url = "https://releases.ubuntu.com/20.04/${var.iso_name}"
-  http_directory = "${path.root}/http"
   output_directory = "${path.root}/output/${var.vm_name}"
 }
 
@@ -100,7 +120,17 @@ source "hyperv-iso" "vm" {
     "${local.iso_remote_url}"
   ]
 
-  http_directory = "${local.http_directory}/hyperv"
+  http_content = {
+    "/user-data" = templatefile("./templates/user-data.pkrtpl.hcl", {
+      username = var.ssh_username
+      password = var.crypted_password
+      hostname = var.vm_name
+      locale = var.locale
+      keyboard_layout = var.keyboard_layout
+      keyboard_variant = var.keyboard_variant
+    })
+    "/meta-data" = ""
+  }
   output_directory = "${local.output_directory}"
 
   boot_wait = "${var.boot_wait}"
@@ -144,8 +174,14 @@ build {
     ]
     scripts = [
       "${path.root}/scripts/ubuntu-base/minimize.sh",
-      "${path.root}/scripts/ubuntu-base/cleanup.sh" # cleanup should be in last
     ]
+    execute_command = "sudo -S -E sh -c '{{ .Vars }} {{ .Path }}'"
+  }
+
+  provisioner "shell" {
+    environment_vars = [ "DEBIAN_FRONTEND=noninteractive" ]
+    pause_before = "5s"
+    script = "${path.root}/scripts/ubuntu-base/cleanup.sh" # cleanup should be in last
     execute_command = "sudo -S -E sh -c '{{ .Vars }} {{ .Path }}'"
   }
 }
