@@ -131,8 +131,9 @@ source "hyperv-iso" "vm" {
   boot_wait = "${var.boot_wait}"
   boot_command = [
     "<esc><esc><wait1>",
+    "c<wait1>",
     "set gfxpayload=keep", "<enter><wait>",
-    "linux /casper/vmlinuz quiet<wait>",
+    "linux /casper/vmlinuz<wait>",
     " autoinstall<wait>", " \"ds=nocloud-net<wait>", ";s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/\"<wait>",
     " ---", "<enter><wait>",
     "initrd /casper/initrd", "<enter><wait>",
