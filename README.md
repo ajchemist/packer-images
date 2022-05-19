@@ -4,10 +4,16 @@ author: ajchemist
 ---
 
 
+# Make crypted password
+
+
 ``` shell
 sudo apt-get install whois
 mkpasswd --method=SHA-512 --rounds=4096
 ```
+
+
+# Build packer images
 
 
 ``` powershell
