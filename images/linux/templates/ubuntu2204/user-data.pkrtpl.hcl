@@ -1,4 +1,5 @@
 #cloud-config
+# Ubuntu Server 22.04 LTS
 autoinstall:
   version: 1
   locale: ${locale}
@@ -39,6 +40,8 @@ autoinstall:
   late-commands:
     - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
     - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu
+    - "lvresize -v -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv"
+    - "resize2fs -p /dev/mapper/ubuntu--vg-ubuntu--lv"
 
 # Local Variables:
 # mode: yaml

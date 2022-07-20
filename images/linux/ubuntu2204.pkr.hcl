@@ -20,7 +20,7 @@ variable "memory" {
 
 variable "boot_wait" {
   type = string
-  default = "2s"
+  default = "1s"
 }
 
 variable "shutdown_timeout" {
@@ -30,7 +30,7 @@ variable "shutdown_timeout" {
 
 variable "iso_name" {
   type = string
-  default = "ubuntu-22.04-live-server-amd64.iso"
+  default = "ubuntu-22.04.1-live-server-amd64.iso"
 }
 
 variable "iso_remote_url" {
@@ -95,7 +95,7 @@ variable "keyboard_variant" {
 }
 
 locals {
-  iso_checksum = "sha256:84aeaf7823c8c61baa0ae862d0a06b03409394800000b3235854a6b38eb4856f"
+  iso_checksum = "sha256:10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb"
   iso_remote_url = "https://releases.ubuntu.com/22.04/${var.iso_name}"
   output_directory = "${path.root}/output/${var.vm_name}"
 }
@@ -115,7 +115,7 @@ source "hyperv-iso" "vm" {
   ]
 
   http_content = {
-    "/user-data" = templatefile("./templates/user-data.pkrtpl.hcl", {
+    "/user-data" = templatefile("./templates/ubuntu2204/user-data.pkrtpl.hcl", {
       username = var.ssh_username
       password = var.crypted_password
       hostname = var.vm_name
@@ -157,27 +157,26 @@ build {
   provisioner "shell" {
     inline = [
       "ls /",
-      "env"
+      "env",
     ]
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "DEBIAN_FRONTEND=noninteractive",
-      "SSH_USERNAME=${var.ssh_username}",
-      "SSH_PASSWORD=${var.ssh_password}",
-      "no_proxy=${var.no_proxy}"
-    ]
-    scripts = [
-      "${path.root}/scripts/ubuntu-base/minimize.sh",
-    ]
+    environment_vars = ["DEBIAN_FRONTEND=noninteractive"]
+    scripts = ["${path.root}/scripts/ubuntu-2204/hotfix.sh"]
     execute_command = "sudo -S -E sh -c '{{ .Vars }} {{ .Path }}'"
   }
 
   provisioner "shell" {
-    environment_vars = [ "DEBIAN_FRONTEND=noninteractive" ]
+    environment_vars = ["DEBIAN_FRONTEND=noninteractive", "SSH_USERNAME=${var.ssh_username}", "SSH_PASSWORD=${var.ssh_password}", "no_proxy=${var.no_proxy}"]
+    execute_command = "sudo -S -E sh -c '{{ .Vars }} {{ .Path }}'"
+    scripts = ["${path.root}/scripts/ubuntu-base/minimize.sh"]
+  }
+
+  provisioner "shell" {
     pause_before = "5s"
-    script = "${path.root}/scripts/ubuntu-base/cleanup.sh" # cleanup should be in last
+    environment_vars = [ "DEBIAN_FRONTEND=noninteractive" ]
     execute_command = "sudo -S -E sh -c '{{ .Vars }} {{ .Path }}'"
+    script = "${path.root}/scripts/ubuntu-base/cleanup.sh" # cleanup should be in last
   }
 }

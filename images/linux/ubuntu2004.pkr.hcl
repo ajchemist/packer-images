@@ -56,6 +56,7 @@ variable "output_directory" {
 
 variable "crypted_password" {
   type = string
+  description = "openssl passwd -6 password."
   default = "$6$rounds=4096$UJSYfXMplc$Z0N/YThWrolFTIREcCCRvVhOigf1YVaH76Io7INhGZwoK9eyBEjkqMS4p4CdSm.iK6SnhhKaQHpn.wJcHuAQt/"
 }
 
