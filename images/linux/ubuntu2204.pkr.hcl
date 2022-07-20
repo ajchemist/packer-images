@@ -115,7 +115,7 @@ source "hyperv-iso" "vm" {
   ]
 
   http_content = {
-    "/user-data" = templatefile("./templates/user-data.pkrtpl.hcl", {
+    "/user-data" = templatefile("./templates/ubuntu2204/user-data.pkrtpl.hcl", {
       username = var.ssh_username
       password = var.crypted_password
       hostname = var.vm_name
